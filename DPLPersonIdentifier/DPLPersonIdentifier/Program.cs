@@ -124,19 +124,38 @@ namespace DPLPersonIdentifier
                     personDir.GetFiles().Where(f => f.Extension == ".jpeg" || f.Extension == ".png"))
                 {
                     Console.WriteLine("image: " + testPersonImage.Name);
+                    var isFound = false;
+                    
                     await using var stream = testPersonImage.OpenRead();
                     var detectedFaces = await Client.Face.DetectWithStreamAsync(stream);
                     var found = await Client.Face.IdentifyAsync(
                         detectedFaces.Select(df => df.FaceId).ToList(), PersonGroupId);
-                    foreach (var foundPerson in found)
-                    {
-                        var foundPersonName = PersonLookup[foundPerson.Candidates.First().PersonId];
-                        Console.WriteLine(foundPersonName);
 
-                        if (foundPersonName != personDir.Name)
+                    
+                    if (found.Any() && found.First().Candidates.Count > 0)
+                    {
+                        foreach (var foundPerson in found)
                         {
-                            throw new InvalidOperationException($"{foundPersonName} does not match {personDir.Name} for image {testPersonImage.Name}");
+                            var foundPersonName = PersonLookup[foundPerson.Candidates.First().PersonId];
+                            Console.WriteLine(foundPersonName);
+
+                            if (foundPersonName != personDir.Name)
+                            {
+                                throw new InvalidOperationException(
+                                    $"{foundPersonName} does not match {personDir.Name} for image {testPersonImage.Name}");
+                            }
+
+                            isFound = true;
                         }
+                    }
+
+                    if (isFound && personDir.Name == "noone")
+                    {
+                        throw new InvalidOperationException(
+                            $"no one was matched for image {testPersonImage.Name}");
+                    } else if (!isFound && personDir.Name != "noone")
+                    {
+                        throw new InvalidOperationException($"no person found for  {testPersonImage.Name}");
                     }
                 }
             }
