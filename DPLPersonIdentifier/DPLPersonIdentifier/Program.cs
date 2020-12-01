@@ -23,8 +23,6 @@ namespace DPLPersonIdentifier
 
         static async Task Main(string[] args)
         {
-            
-            
             Client = new FaceClient(new ApiKeyServiceClientCredentials(SubKey))
             {
                 Endpoint = Endpoint,
@@ -32,8 +30,6 @@ namespace DPLPersonIdentifier
 
             await Train();
             await Test();
-            
-            Console.WriteLine("TEST");
         }
 
         static async Task Train()
